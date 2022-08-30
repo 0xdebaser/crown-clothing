@@ -1,69 +1,36 @@
 import { useContext } from "react";
 
+import "./checkout.styles.scss";
+
 import { CartContext } from "../../contexts/cart.context";
+import CheckoutItem from "../../components/checkout-item/checkout-item.component";
 
 function Checkout() {
-  const { itemsInCart, setItemsInCart } = useContext(CartContext);
-
-  function decreaseQuantity(item) {
-    if (item.quantity === 1) {
-      removeItem(item);
-    } else {
-      const itemIndex = itemsInCart.findIndex(
-        (object) => object.id === item.id
-      );
-      const newArray = itemsInCart.slice();
-      newArray[itemIndex]["quantity"]--;
-      setItemsInCart(newArray);
-    }
-  }
-
-  function increaseQuantity(item) {
-    const itemIndex = itemsInCart.findIndex((object) => object.id === item.id);
-    const newArray = itemsInCart.slice();
-    newArray[itemIndex]["quantity"]++;
-    setItemsInCart(newArray);
-  }
-
-  function removeItem(item) {
-    const itemIndex = itemsInCart.findIndex((object) => object.id === item.id);
-    const newArray = itemsInCart.slice();
-    newArray.splice(itemIndex, 1);
-    setItemsInCart(newArray);
-  }
+  const { itemsInCart, cartTotal } = useContext(CartContext);
 
   return (
-    <div>
-      <span>Product</span>
-      <span>Description</span>
-      <span>Quantity</span>
-      <span>Price</span>
-      <span>Remove</span>
-      <div>
-        {itemsInCart.map((item) => {
-          const { id, imageUrl, name, quantity, price } = item;
-          return (
-            <div key={id}>
-              <img src={imageUrl} alt={name} />
-              <span>{name}</span>
-              <span>
-                <button onClick={() => decreaseQuantity(item)}>&lt;</button>
-                {quantity}
-                <button onClick={() => increaseQuantity(item)}>&gt;</button>
-              </span>
-              <span>{price}</span>
-              <button onClick={() => removeItem(item)}>X</button>
-            </div>
-          );
-        })}
+    <div className="checkout-container">
+      <div className="checkout-header">
+        <div className="header-block">
+          <span>Product</span>
+        </div>
+        <div className="header-block">
+          <span>Description</span>
+        </div>
+        <div className="header-block">
+          <span>Quantity</span>
+        </div>
+        <div className="header-block">
+          <span>Price</span>
+        </div>
+        <div className="header-block">
+          <span>Remove</span>
+        </div>
       </div>
-      <span>
-        Total: $
-        {itemsInCart.reduce(
-          (previousTotal, item) => previousTotal + item.price * item.quantity,
-          0
-        )}
-      </span>
+      {itemsInCart.map((item) => (
+        <CheckoutItem key={item.id} cartItem={item} />
+      ))}
+      <span className="total">Total: ${cartTotal}</span>
     </div>
   );
 }

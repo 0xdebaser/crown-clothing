@@ -8,7 +8,7 @@ import CartItem from "../cart-item/cart-item.component";
 import { CartContext } from "../../contexts/cart.context";
 
 function CartDropdown() {
-  const { itemsInCart } = useContext(CartContext);
+  const { itemsInCart, setShowDropDown } = useContext(CartContext);
   const navigate = useNavigate();
 
   return (
@@ -23,6 +23,7 @@ function CartDropdown() {
       <Button
         onClick={() => {
           navigate("../checkout");
+          setShowDropDown(false);
         }}
       >
         Go to Checkout
