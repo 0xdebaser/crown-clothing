@@ -1,56 +1,91 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useReducer } from "react";
 
-function addCartItem(itemsInCart, productToAdd) {
-  //find if itemsInCart contains productToAdd
-  const itemIndex = itemsInCart.findIndex(
-    (item) => item.id === productToAdd.id
-  );
-  //if found, increment quantity
-  if (itemIndex > -1) {
-    const newArray = itemsInCart.slice();
-    newArray[itemIndex]["quantity"]++;
-    return newArray;
-  } else {
-    //if not found, add to array
-    return [...itemsInCart, { ...productToAdd, quantity: 1 }];
+export const CartContext = createContext({
+  itemsInCart: null,
+  showDropDown: false,
+  cartCount: 0,
+  cartTotal: 0,
+});
+
+export const CART_ACTION_TYPES = {
+  TOGGLE_DROP_DOWN: "TOGGLE_DROP_DOWN",
+  SET_CART_ITEMS: "SET_CART_ITEMS",
+};
+
+function cartReducer(state, action) {
+  const { type, payload } = action;
+  const { showDropDown } = state;
+  switch (type) {
+    case CART_ACTION_TYPES.SET_CART_ITEMS:
+      return {
+        ...state,
+        ...payload,
+      };
+    case CART_ACTION_TYPES.TOGGLE_DROP_DOWN:
+      return {
+        ...state,
+        showDropDown: !showDropDown,
+      };
+    default:
+      throw new Error(`Unhandled type in cartReducer: ${type}`);
   }
 }
 
-export const CartContext = createContext({
+const INTIAL_STATE = {
   itemsInCart: [],
-  setItemsInCart: null,
   showDropDown: false,
-  setShowDropDown: null,
-});
+  cartCount: 0,
+  cartTotal: 0,
+};
 
 export function CartProvider({ children }) {
-  const [itemsInCart, setItemsInCart] = useState([]);
-  const [showDropDown, setShowDropDown] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-  const [cartTotal, setCartTotal] = useState(0);
+  const [state, dispatch] = useReducer(cartReducer, INTIAL_STATE);
 
-  useEffect(() => {
-    const newCount = itemsInCart.reduce(
+  const { itemsInCart, showDropDown, cartCount, cartTotal } = state;
+
+  function updateCartItemsReducer(newCartItems) {
+    //generate new cartCount
+    const newCartCount = newCartItems.reduce(
       (previousValue, item) => previousValue + item.quantity,
       0
     );
-    setCartCount(newCount);
-    const newTotal = itemsInCart.reduce(
+    //generate new cartTotal
+    const newCartTotal = newCartItems.reduce(
       (previousTotal, item) => previousTotal + item.price * item.quantity,
       0
     );
-    setCartTotal(newTotal);
-  }, [itemsInCart]);
 
-  function addItemToCart(productToAdd) {
-    setItemsInCart(addCartItem(itemsInCart, productToAdd));
+    dispatch({
+      type: CART_ACTION_TYPES.SET_CART_ITEMS,
+      payload: {
+        itemsInCart: newCartItems,
+        cartCount: newCartCount,
+        cartTotal: newCartTotal,
+      },
+    });
+  }
+
+  function addItemToCart(item) {
+    //find if itemsInCart contains productToAdd
+    const itemIndex = itemsInCart.findIndex((object) => object.id === item.id);
+    //if found, increment quantity
+    if (itemIndex > -1) {
+      const newArray = itemsInCart.slice();
+      newArray[itemIndex]["quantity"]++;
+      updateCartItemsReducer(newArray);
+    } else {
+      //if not found, add to array
+      updateCartItemsReducer([...itemsInCart, { ...item, quantity: 1 }]);
+    }
   }
 
   function removeItemFromCart(item) {
-    const itemIndex = itemsInCart.findIndex((object) => object.id === item.id);
+    const indexToRemove = itemsInCart.findIndex(
+      (object) => object.id === item.id
+    );
     const newArray = itemsInCart.slice();
-    newArray.splice(itemIndex, 1);
-    setItemsInCart(newArray);
+    newArray.splice(indexToRemove, 1);
+    updateCartItemsReducer(newArray);
   }
 
   function decreaseQuantity(item) {
@@ -62,15 +97,20 @@ export function CartProvider({ children }) {
       );
       const newArray = itemsInCart.slice();
       newArray[itemIndex]["quantity"]--;
-      setItemsInCart(newArray);
+      updateCartItemsReducer(newArray);
     }
+  }
+
+  function toggleDropDown() {
+    dispatch({
+      type: CART_ACTION_TYPES.TOGGLE_DROP_DOWN,
+    });
   }
 
   const value = {
     itemsInCart,
-    setItemsInCart,
     showDropDown,
-    setShowDropDown,
+    toggleDropDown,
     addItemToCart,
     cartCount,
     removeItemFromCart,
@@ -80,13 +120,3 @@ export function CartProvider({ children }) {
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
-
-// img src={imageUrl} alt={name} />
-// <h2>{name}</h2>
-// <span>
-//   <button onClick={() => decreaseQuantity(item)}>&lt;</button>
-//   {quantity}
-//   <button onClick={() => addItemToCart(item)}>&gt;</button>
-// </span>
-// <span>{price}</span>
-// <button onClick={() => removeItemFromCart(item)}>X</button>
