@@ -11,13 +11,13 @@ import {
 } from "./cart-dropdown.styles";
 
 function CartDropdown() {
-  const { itemsInCart, setShowDropDown } = useContext(CartContext);
+  const { itemsInCart, toggleDropDown } = useContext(CartContext);
   const navigate = useNavigate();
 
   return (
     <CartDropdownContainer>
       <CartItems>
-        {itemsInCart.length > 0 ? (
+        {itemsInCart && itemsInCart.length > 0 ? (
           itemsInCart.map((item) => <CartItem key={item.id} cartItem={item} />)
         ) : (
           <EmptyMessage>Your cart is empty.</EmptyMessage>
@@ -26,7 +26,7 @@ function CartDropdown() {
       <Button
         onClick={() => {
           navigate("../checkout");
-          setShowDropDown(false);
+          toggleDropDown();
         }}
       >
         Go to Checkout
